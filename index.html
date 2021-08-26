@@ -1,0 +1,59 @@
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <title>wasm</title>
+  </head>
+  <body>
+    <h3>Convert to Grayscale using SIMD</h3>
+    <div>
+      <canvas width="3840" height="2160" style="border: solid 1px black;"></canvas>
+    </div>
+    <div style="margin-top: 16px;">
+      <button id="btn-reset">Reset</button>
+      <button id="btn">Convert(SIMD)</button>
+      <button id="btn2">Convert(Normal)</button>
+    </div>
+    <script type="module">
+      import init, { proc, proc2 } from './pkg/rust_wasm.js';
+      const canvas = document.querySelector('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      const width = 3840;
+      const height = 2160;
+
+      function loadImage() {
+        const img = new Image();
+        img.src = './wallpaper1.jpg';
+        img.decode().then(() => {
+          ctx.drawImage(img, 0, 0);
+        });
+      }
+
+      function click() {
+        console.time('click');
+        const imageData = ctx.getImageData(0, 0, width, height);
+        proc(new Uint8Array(imageData.data.buffer), imageData.data.length);
+        ctx.putImageData(imageData, 0, 0);
+        console.timeEnd('click');
+      }
+
+      function click2() {
+        console.time('click2');
+        const imageData = ctx.getImageData(0, 0, width, height);
+        proc2(new Uint8Array(imageData.data.buffer), imageData.data.length);
+        ctx.putImageData(imageData, 0, 0);
+        console.timeEnd('click2');
+      }
+
+      async function run() {
+        await init();
+        document.querySelector('#btn').addEventListener('click', click);
+        document.querySelector('#btn2').addEventListener('click', click2);
+        document.querySelector('#btn-reset').addEventListener('click', loadImage);
+        loadImage();
+      }
+      run();
+
+    </script>
+  </body>
+</html>
